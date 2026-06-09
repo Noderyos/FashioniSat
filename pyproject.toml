@@ -1,0 +1,15 @@
+[project]
+name = "fashionisat"
+version = "0.0.1"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "cbor2==6.1.2",
+    "flask>=3.1.3",
+    "flask-login>=0.6.3",
+    "matplotlib>=3.10.9",
+    "pyvips>=3.1.1",
+    "tqdm>=4.68.1",
+    "watchdog>=6.0.0",
+]

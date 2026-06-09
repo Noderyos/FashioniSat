@@ -1,0 +1,30 @@
+<html>
+<head>
+  <title>FashioniSat</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% for sat in data %}
+<details class="dataset">
+  <summary>{{ sat["satellite"] }} - {{ sat["date"] }}</summary>
+  {% for prod in sat["products"] %}
+  <div class="product">
+    <span>{{ prod["instrument"] }}</span>
+    <div class="images">
+      {% for image in prod["images"] %}
+      <div class="image-card">
+        <a href="{{ image['data'] }}">
+          <img src="{{ image['thumb'] }}" alt="{{ image['name'] }}" loading="lazy">
+          <div class="image-info">
+            <h4>{{ image['name'] }}</h4>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</details>
+{% endfor %}
+</body>
+</html>
