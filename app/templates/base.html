@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FashioniSat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <header>
+      <div class="header-inner">
+        <div class="logo">FashioniSat</div>
+        <nav class="links">
+          <a href="#">docs</a>
+          <a href="{{ url_for('admin.login') }}">admin</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container-outer">
+      <div class="container">
+        <aside class="sidebar">
+          <h3>Navigation</h3>
+          <ul>
+            {% for item in nav_items %}
+              <li>
+                <a href="{{ url_for(item.endpoint) }}">
+                  <button class="btn underline" {% if request.endpoint == item.endpoint %}disabled{% endif %}>
+                    {{ item.label }}
+                  </button>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </aside>
+
+        <main>
+          {% block main %}
+          {% endblock %}
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

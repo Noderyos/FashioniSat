@@ -1,30 +1,28 @@
-<html>
-<head>
-  <title>FashioniSat</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-{% for sat in data %}
-<details class="dataset">
-  <summary>{{ sat["satellite"] }} - {{ sat["date"] }}</summary>
-  {% for prod in sat["products"] %}
-  <div class="product">
-    <span>{{ prod["instrument"] }}</span>
-    <div class="images">
-      {% for image in prod["images"] %}
-      <div class="image-card">
-        <a href="{{ image['data'] }}">
-          <img src="{{ image['thumb'] }}" alt="{{ image['name'] }}" loading="lazy">
-          <div class="image-info">
-            <h4>{{ image['name'] }}</h4>
+{% extends "base.html" %}
+
+{% block main %}
+  <h2>Announcements</h2>
+  {% if announcements %}
+    {% for el in announcements %}
+      <div class="accordion" open>
+        <div class="list">
+          <div>
+            {% if el["level"] == "info" %}
+              <span class="green">INFO</span>
+            {% elif el["level"] == "important" %}
+              <span class="red">IMPORTANT</span>
+            {% else %}
+              <span class="green">OTHER</span>
+            {% endif %}
+            <span>{{ el['title'] }} - {{ el['date'] }}</span>
           </div>
-        </a>
+        </div>
+        <div class="accordion-body">
+          {{ el['content'] | safe }}
+        </div>
       </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endfor %}
-</details>
-{% endfor %}
-</body>
-</html>
+    {% endfor %}
+  {% else %}
+    <p>No new announcements at this time.</p>
+  {% endif %}
+{% endblock %}

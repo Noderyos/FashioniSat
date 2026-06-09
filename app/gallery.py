@@ -8,49 +8,38 @@ from config_loader import config
 
 bp = Blueprint("gallery", __name__, url_prefix="/gallery")
 
+
 def get_gallery(page_idx: int) -> list:
     conn = sqlite3.connect(os.path.join(config.DATA_FOLDER, "db.sqlite"))
     cur = conn.cursor()
 
     query = """
         WITH elements AS (
-            SELECT 
-                'dataset' AS type,
-                id        AS entity_id,
-                timestamp
-            FROM dataset
-            UNION ALL
-            SELECT 
-                'product' AS type,
-                id        AS entity_id,
-                timestamp
-            FROM product
-            WHERE dataset_id IS NULL
-            ORDER BY timestamp DESC
+            SELECT COALESCE(p.dataset_id, -p.id) AS gid, *
+            FROM product p
+        )
+        SELECT
+            e.gid,
+            e.id AS product_id,
+            e.path,
+            e.timestamp,
+            e.satellite,
+            e.instrument
+        FROM elements e
+        WHERE e.gid IN (
+            SELECT DISTINCT e.gid
+            FROM elements e
+            ORDER BY e.timestamp DESC
             LIMIT ? OFFSET ?
         )
-        SELECT p.dataset_id,
-            p.id,
-            p.path,
-            e.timestamp,
-            p.satellite,
-            COALESCE(ins.name, p.instrument) AS instrument_name
-        FROM elements e
-        JOIN product p
-            ON (e.type = 'dataset' AND p.dataset_id = e.entity_id)
-            OR (e.type = 'product' AND p.id = e.entity_id)
-        LEFT JOIN instrument ins
-            ON p.instrument = ins.instrument
-        ORDER BY 
-            e.timestamp DESC,
-            p.timestamp DESC;
+        ORDER BY timestamp DESC;
     """
 
-    data = []
-    elements = {}
-
-    cur.execute(query, (5, page_idx*5))
+    cur.execute(query, (5, page_idx * 5))
     products = cur.fetchall()
+
+    data = []
+    dataset = {}
 
     if products:
         prod_id_to_path = {
@@ -74,6 +63,7 @@ def get_gallery(page_idx: int) -> list:
                 }
             )
 
+        current_dataset = None
         for dat_id, prod_id, prod_path, timestamp, sat, instr in products:
             images = images_by_prod.get(prod_id, [])
 
@@ -84,22 +74,22 @@ def get_gallery(page_idx: int) -> list:
             date_str = datetime.fromtimestamp(timestamp).strftime("%d/%m/%Y %H:%M:%S")
             product_info = {"instrument": instr, "images": images}
 
-            if dat_id is None:
-                data.append(
-                    {
-                        "satellite": sat,
-                        "date": date_str,
-                        "products": [product_info],
-                    }
-                )
-            else:
-                group = elements.setdefault(
-                    dat_id,
-                    {"satellite": sat, "date": date_str, "products": []},
-                )
-                group["products"].append(product_info)
+            if dat_id != current_dataset:
+                if dataset:
+                    data.append(dataset)
+                current_dataset = dat_id
+                dataset = {
+                    "is_dataset": dat_id > 0,
+                    "satellite": sat,
+                    "date": date_str,
+                    "products": [],
+                }
 
-        data.extend(elements.values())
+            if dat_id is None:
+                dataset["products"] = [product_info]
+            else:
+                dataset["products"].append(product_info)
+        data.append(dataset)
 
     cur.close()
     conn.commit()
@@ -107,15 +97,16 @@ def get_gallery(page_idx: int) -> list:
 
     return data
 
+
 @bp.route("/")
 def index():
-    page_idx_str = request.args.get("page", '1')
+    page_idx_str = request.args.get("page", "1")
     page_idx = 0
     if page_idx_str.isdigit():
         page_idx = max(0, int(page_idx_str) - 1)
 
     data = get_gallery(page_idx)
-    return render_template("index.html", data=data)
+    return render_template("gallery.html", data=data)
 
 
 @bp.route("/thumbnails/<name>")

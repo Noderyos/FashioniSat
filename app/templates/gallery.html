@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block main %}
+  <h2>Gallery</h2>
+
+  {% for sat in data %}
+    <details class="accordion">
+      <summary class="list">
+        <div>
+          {% if sat["is_dataset"] %}
+            <span class="green">{{ sat["satellite"] }}</span>
+          {% else %}
+            <span class="red">{{ sat["satellite"] }}</span>
+          {% endif %}
+          <span>{{ sat["date"] }}</span>
+        </div>
+      </summary>
+      <div class="accordion-body">
+
+        {% for prod in sat["products"] %}
+          <div class="product">
+            <span><strong>{{ prod["instrument"] }}</strong></span>
+            <div class="images">
+
+              {% for image in prod["images"] %}
+                <div class="image-card">
+                  <a href="{{ image['data'] }}">
+                    <img src="{{ image['thumb'] }}" alt="{{ image['name'] }}" loading="lazy">
+                    <div class="image-info">
+                      <h4>{{ image['name'] }}</h4>
+                    </div>
+                  </a>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </details>
+  {% endfor %}
+{% endblock %}
