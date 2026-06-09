@@ -15,8 +15,14 @@ def get_gallery(page_idx: int) -> list:
 
     query = """
         WITH elements AS (
-            SELECT COALESCE(p.dataset_id, -p.id) AS gid, *
+            SELECT COALESCE(p.dataset_id, -p.id) AS gid,
+            p.id,
+            p.path,
+            p.timestamp,
+            COALESCE(p.satellite, d.satellite) as satellite,
+            p.instrument
             FROM product p
+            LEFT JOIN dataset d on p.dataset_id = d.id
         )
         SELECT
             e.gid,
