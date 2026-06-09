@@ -15,7 +15,7 @@ def index():
                 "content": "Multi line\ncontent",
             },
             {
-                "level": "importent",
+                "level": "important",
                 "title": "This is an IMPORTANT",
                 "date": "tomorrow",
                 "content": "THIS IS (not) VERY IMPORTANT",

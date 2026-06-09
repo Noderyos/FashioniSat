@@ -92,7 +92,6 @@ def get_gallery(page_idx: int) -> list:
         data.append(dataset)
 
     cur.close()
-    conn.commit()
     conn.close()
 
     return data

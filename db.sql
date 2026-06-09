@@ -34,6 +34,6 @@ CREATE TABLE IF NOT EXISTS instrument (
 
 CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
-    passwd_hash TEXT NOT NULL
+    username VARCHAR(32) UNIQUE NOT NULL,
+    passwd_hash CHAR(40) NOT NULL
 );
