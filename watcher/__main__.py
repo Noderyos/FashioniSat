@@ -7,6 +7,8 @@ from .utils import is_image, BASE_PATH
 from .watcher import run_filewatcher, run_updater
 from .thumbnails import run_thumbnail
 
+from . import LOGGER
+
 from config_loader import config
 
 def list_files_walk(base_path: str) -> None:
@@ -24,16 +26,16 @@ def list_files_walk(base_path: str) -> None:
 
 
 def main():
-    print(f"[INFO] Scanning {BASE_PATH} ...")
+    LOGGER.info(f"Scanning {BASE_PATH} ...")
     list_files_walk(BASE_PATH)
 
-    print(f"[INFO] Starting updater ...")
+    LOGGER.info(f"Starting updater ...")
     updater = run_updater()
 
-    print(f"[INFO] Starting watcher ...")
+    LOGGER.info(f"Starting watcher thread ...")
     observer = run_filewatcher()
 
-    print(f"[INFO] Starting thumbnail ...")
+    LOGGER.info(f"Starting thumbnail thread ...")
     thumbnail = run_thumbnail()
 
     updater.join()

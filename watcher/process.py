@@ -5,6 +5,7 @@ import sqlite3
 
 from .utils import hash_file, is_image, BASE_PATH
 
+from . import LOGGER
 
 def process_image(conn: sqlite3.Connection, image_path: str, from_product: bool):
     cur = conn.cursor()
@@ -25,7 +26,7 @@ def process_image(conn: sqlite3.Connection, image_path: str, from_product: bool)
     )
     result = cur.fetchone()
     if not result:
-        print("[INFO] New image", relative)
+        LOGGER.debug(f"New image {relative}")
         # from_product will be updated if product.cbor is updated
         cur.execute(
             "INSERT INTO image(product_id, file, sha1, thumb_file, from_product) "
@@ -33,7 +34,7 @@ def process_image(conn: sqlite3.Connection, image_path: str, from_product: bool)
             (prod_id, image, image_hash, None, from_product),
         )
     elif image_hash != result[0]:
-        print("[INFO] Updating image", relative)
+        LOGGER.debug(f"Updating image {relative}")
         if from_product:
             cur.execute(
                 "UPDATE image SET sha1 = ?, thumb_file = ?, from_product = ?"
@@ -69,7 +70,7 @@ def process_dataset(conn: sqlite3.Connection, dataset_path: str):
     if not need_update:
         return
 
-    print("[INFO] Updating", relative)
+    LOGGER.debug(f"Updating dataset {relative}")
 
     json_data = json.loads(raw_data)
     satellite = json_data.get("satellite", None)
@@ -78,14 +79,14 @@ def process_dataset(conn: sqlite3.Connection, dataset_path: str):
     cur.execute("SELECT COUNT(*) FROM dataset WHERE path = ?", (relative,))
 
     if cur.fetchone()[0] == 0:
-        print("[INFO] New dataset", relative)
+        LOGGER.debug(f"New dataset {relative}")
         cur.execute(
             "INSERT INTO dataset(path, sha1, satellite, timestamp)"
             "VALUES (?, ?, ?, ?)",
             (relative, dataset_hash, satellite, timestamp),
         )
     else:
-        print("[INFO] Existing dataset", relative)
+        LOGGER.info(f"Existing dataset {relative}")
         cur.execute(
             "UPDATE dataset SET "
             "sha1 = ?, satellite = ?, timestamp = ?"
@@ -132,7 +133,7 @@ def process_product(conn: sqlite3.Connection, product_path: str):
     if not need_update:
         return
 
-    print("[INFO] Updating", relative)
+    LOGGER.info(f"Updating product {relative}")
 
     cbor = cbor2.loads(raw_data)
 
@@ -143,14 +144,14 @@ def process_product(conn: sqlite3.Connection, product_path: str):
     cur.execute("SELECT COUNT(*) FROM product WHERE path = ?", (relative,))
 
     if cur.fetchone()[0] == 0:
-        print("[INFO] New product", relative)
+        LOGGER.info("New product {relative}")
         cur.execute(
             "INSERT INTO product(path, sha1, instrument, satellite, timestamp)"
             "VALUES (?, ?, ?, ?, ?)",
             (relative, product_hash, instrument, satellite, timestamp),
         )
     else:
-        print("[INFO] Existing product", relative)
+        LOGGER.info("Existing product {relative}")
         if timestamp:
             cur.execute(
                 "UPDATE product SET "

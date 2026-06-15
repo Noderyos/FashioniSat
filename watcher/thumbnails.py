@@ -7,6 +7,8 @@ from threading import Thread
 
 from config_loader import config
 
+from . import LOGGER
+
 THUMBNAILS_PATH = os.path.join(config.DATA_FOLDER, "thumbnails")
 
 def thumbnails_updater():
@@ -20,10 +22,9 @@ def thumbnails_updater():
             "WHERE thumb_file IS NULL"
         )
 
-
         for prod_id, file, path in cur.fetchall():
             image_path = os.path.join(config.SATDUMP_FOLDER, path, file)
-            print(f"[INFO] Processing thumbnail for {image_path}")
+            LOGGER.debug(f"Processing thumbnail for {image_path}")
 
             img = pyvips.Image.new_from_file(str(image_path), access="sequential")
             resized = img.resize(config.THUMBNAIL_WIDTH / img.width)
