@@ -54,7 +54,12 @@ def get_gallery(page_idx: int) -> list:
         prod_ids = tuple(prod_id_to_path.keys())
 
         cur.execute(
-            f"SELECT product_id, file, thumb_file FROM image WHERE product_id IN ({",".join("?" * len(prod_ids))})",
+            f"""
+            SELECT
+                product_id, file, thumb_file 
+            FROM image 
+            WHERE product_id IN ({",".join("?" * len(prod_ids))})
+            """,
             prod_ids,
         )
 

@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS image (
     file TEXT NOT NULL,
     sha1 CHAR(40) NOT NULL,
     thumb_file TEXT,
+    from_product BOOLEAN,
     PRIMARY KEY (product_id, file),
     FOREIGN KEY (product_id) REFERENCES product(id)
 );

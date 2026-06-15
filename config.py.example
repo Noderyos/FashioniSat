@@ -10,6 +10,8 @@ SATDUMP_FOLDER = "live_output"
 
 DATA_FOLDER = "data"
 THUMBNAIL_WIDTH = 500
+THUMBNAIL_Q = 85
+THUMBNAIL_UPDATE_RATE = 180
 
 # Buffer size for hashing files
 HASH_BUFFER_SIZE = 1024 * 1024

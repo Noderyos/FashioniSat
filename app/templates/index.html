@@ -18,7 +18,7 @@
           </div>
         </div>
         <div class="accordion-body">
-          {{ el['content'] | safe }}
+          {{ el['content'].replace("\n", "<br>") | safe }}
         </div>
       </div>
     {% endfor %}
