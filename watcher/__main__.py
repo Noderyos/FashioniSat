@@ -11,6 +11,7 @@ from . import LOGGER
 
 from config_loader import config
 
+
 def list_files_walk(base_path: str) -> None:
     conn = sqlite3.connect(os.path.join(config.DATA_FOLDER, "db.sqlite"))
     for root, dirs, files in os.walk(base_path):

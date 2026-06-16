@@ -1,12 +1,14 @@
 import os
 from datetime import datetime
 
+
 class LogLevel:
     DEBUG = 0
     INFO = 1
     WARN = 2
     ERROR = 3
     CRIT = 4
+
 
 class Logger:
     def __init__(self, file=None, loglevel=LogLevel.INFO):

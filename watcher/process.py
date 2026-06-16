@@ -7,6 +7,7 @@ from .utils import hash_file, is_image, BASE_PATH
 
 from . import LOGGER
 
+
 def process_image(conn: sqlite3.Connection, image_path: str, from_product: bool):
     cur = conn.cursor()
 
