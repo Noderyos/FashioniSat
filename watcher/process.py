@@ -99,6 +99,7 @@ def process_dataset(conn: sqlite3.Connection, dataset_path: str):
 
     for product in json_data["products"]:
         prod_path = os.path.join(relative, product)
+        prod_path = os.path.normpath(prod_path)
         cur.execute("SELECT COUNT(*) FROM product WHERE path = ?", (prod_path,))
         if cur.fetchone()[0]:
             cur.execute(
