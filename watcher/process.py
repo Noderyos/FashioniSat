@@ -144,14 +144,14 @@ def process_product(conn: sqlite3.Connection, product_path: str):
     cur.execute("SELECT COUNT(*) FROM product WHERE path = ?", (relative,))
 
     if cur.fetchone()[0] == 0:
-        LOGGER.info("New product {relative}")
+        LOGGER.info(f"New product {relative}")
         cur.execute(
             "INSERT INTO product(path, sha1, instrument, satellite, timestamp)"
             "VALUES (?, ?, ?, ?, ?)",
             (relative, product_hash, instrument, satellite, timestamp),
         )
     else:
-        LOGGER.info("Existing product {relative}")
+        LOGGER.info(f"Existing product {relative}")
         if timestamp:
             cur.execute(
                 "UPDATE product SET "
