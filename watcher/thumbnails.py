@@ -56,6 +56,13 @@ def thumbnails_updater():
 
         to_process = cur.fetchall()
         for i, els in enumerate(split(to_process, config.THUMBNAIL_THREADS)):
+            conn.executemany(
+                 "UPDATE image "
+                 "SET thumb_file = '__processing__' "
+                 "WHERE product_id = ? "
+                 "AND file = ?",
+                [(prod_id, file) for prod_id, file, _ in els]
+            )
             for el in els:
                 thumbnails_queues[i].put(el)
 
