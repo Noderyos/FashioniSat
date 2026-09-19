@@ -63,6 +63,7 @@ def thumbnails_updater():
                  "AND file = ?",
                 [(prod_id, file) for prod_id, file, _ in els]
             )
+            conn.commit()
             for el in els:
                 thumbnails_queues[i].put(el)
 
