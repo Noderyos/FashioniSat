@@ -1,0 +1,75 @@
+.product {
+    margin-bottom: 25px;
+}
+
+.product > span {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: var(--color-text-primary);
+}
+
+.images {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.image-card {
+    background: var(--color-header);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.image-card:hover {
+    border-color: var(--color-text-secondary);
+    transform: translateY(-2px);
+}
+
+.image-card a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.image-card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-hover);
+}
+
+.image-info {
+    padding: 10px;
+}
+
+.image-card h4 {
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    font-size: 0.85rem;
+    font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#pagination {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+#pagination a {
+    color: var(--color-text-primary);
+    text-decoration: none;
+}
+
+#pagination span {
+    color: var(--color-text-secondary);
+}
