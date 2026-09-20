@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for
+from flask import Blueprint, request, redirect, url_for, render_template
 from .extensions import login_manager, User
 from flask_login import current_user, login_user, login_required, logout_user
 import sqlite3
@@ -18,11 +18,14 @@ def load_user(user_id):
 def index():
     if not current_user.is_authenticated:
         return redirect(url_for("admin.login"))
-    return f"Logged in as {current_user.id}"
-
+    return render_template("admin.html")
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("admin.index"))
+
+    error = None
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -33,24 +36,15 @@ def login():
         cur.execute("SELECT user.passwd_hash FROM user WHERE username=?", (username,))
         result = cur.fetchone()
 
-        if result is None:
-            return False
+        if result:
+            (passwd_hash,) = result
+            if passwd_hash == sha1(password.encode()).hexdigest():
+                login_user(User(username))
+                return redirect(url_for("admin.index"))
 
-        (passwd_hash,) = result
+        error = "Invalid credentials"
 
-        if passwd_hash == sha1(password.encode()).hexdigest():
-            login_user(User(username))
-            return redirect(url_for("admin.index"))
-
-        return "Invalid credentials", 401
-
-    return """
-    <form method="post">
-        <input name="username" placeholder="Username">
-        <input name="password" type="password" placeholder="Password">
-        <button type="submit">Login</button>
-    </form>
-    """
+    return render_template("login.html", error=error)
 
 
 @bp.route("/logout")
