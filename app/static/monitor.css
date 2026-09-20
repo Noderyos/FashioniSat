@@ -1,0 +1,20 @@
+.subtitle {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.val {
+    font-size: 1.1rem;
+    font-family: monospace;
+    color: var(--color-text-primary);
+}
+
+.section {
+    margin-top: 15px;
+}
+
+.section-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}

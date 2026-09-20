@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block main %}
+  <h2>Tracker Monitor</h2>
+
+  <div class="accordion" open>
+    <div class="list">
+      <div>
+        <span>Next Event</span>
+      </div>
+    </div>
+    <div class="accordion-body">
+      <div>
+        <div class="subtitle">Object Name</div>
+        <div id="val-object-name" class="val">-</div>
+      </div>
+
+      <div class="section">
+        <div class="subtitle">Type</div>
+        <div id="val-event-type" class="val">-</div>
+        <div class="section-body">
+          <div>
+            <div class="subtitle">Event Time</div>
+            <div id="val-time" class="val">-</div>
+          </div>
+          <div>
+            <div class="subtitle">Countdown</div>
+            <div id="val-countdown" class="val">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion" open>
+    <div class="list">
+      <div>
+        <span>Rotator & Tracking</span>
+      </div>
+    </div>
+    <div class="accordion-body">
+      <div>
+        <span id="badge-engaged">Engaged: -</span>
+        <span id="badge-tracking">Tracking: -</span>
+      </div>
+      <div class="section section-body">
+        <div>
+          <div class="subtitle">Sat Pos (Az/El)</div>
+          <div id="val-sat-pos" class="val">- / -</div>
+        </div>
+        <div>
+          <div class="subtitle">Sat Range</div>
+          <div id="val-sat-range" class="val">-</div>
+        </div>
+        <div>
+          <div class="subtitle">Rot Pos (Az/El)</div>
+          <div id="val-rot-pos" class="val">- / -</div>
+        </div>
+        <div>
+          <div class="subtitle">Req Pos (Az/El)</div>
+          <div id="val-req-pos" class="val">- / -</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function formatTime(timestamp) {
+        if (!timestamp) return "-";
+        return new Date(timestamp * 1000).toLocaleTimeString();
+    }
+
+    function formatCountdown(seconds) {
+        if (seconds < 0) return "-";
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function updateBadge(el, active) {
+        if (active) {
+            el.className = "green"
+        } else {
+            el.className = "red"
+        }
+    }
+
+    async function fetchTrackerData() {
+        const res = await fetch('{{ url_for("monitor.api_data") }}');
+        const data = await res.json();
+        const trk = data.object_tracker;
+        if (trk) {
+            document.getElementById('val-object-name').innerText = trk.object_name || "-";
+            document.getElementById('val-event-type').innerText = trk.next_event_is_aos ? "AOS" : "LOS";
+            document.getElementById('val-countdown').innerText = formatCountdown(trk.next_event_in);
+
+            if (trk.next_event_is_aos)
+                document.getElementById('val-time').innerText = formatTime(trk.next_aos_time);
+            else
+                document.getElementById('val-time').innerText = formatTime(trk.next_los_time);
+
+            document.getElementById('val-sat-pos').innerText = `${trk.sat_current_pos.az.toFixed(1)}° / ${trk.sat_current_pos.el.toFixed(1)}°`;
+            document.getElementById('val-sat-range').innerText = `${trk.sat_current_range.toFixed(1)} km`;
+            document.getElementById('val-rot-pos').innerText = `${trk.rot_current_pos.az.toFixed(1)}° / ${trk.rot_current_pos.el.toFixed(1)}°`;
+            document.getElementById('val-req-pos').innerText = `${trk.rot_current_req_pos.az.toFixed(1)}° / ${trk.rot_current_req_pos.el.toFixed(1)}°`;
+          
+            const badgeEng = document.getElementById('badge-engaged');
+            badgeEng.innerText = "Engaged: " + (trk.rotator_engaged ? "YES" : "NO");
+            updateBadge(badgeEng, trk.rotator_engaged);
+
+            const badgeTrk = document.getElementById('badge-tracking');
+            badgeTrk.innerText = "Tracking: " + (trk.rotator_tracking ? "YES" : "NO");
+            updateBadge(badgeTrk, trk.rotator_tracking);
+        }
+    }
+
+    fetchTrackerData();
+    setInterval(fetchTrackerData, 1000);
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='monitor.css') }}" />
+{% endblock %}

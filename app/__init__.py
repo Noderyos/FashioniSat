@@ -8,17 +8,19 @@ def create_app():
 
     login_manager.init_app(app)
 
-    from . import gallery, admin, index
+    from . import gallery, admin, index, monitor
 
     app.register_blueprint(gallery.bp)
     app.register_blueprint(admin.bp)
     app.register_blueprint(index.bp)
+    app.register_blueprint(monitor.bp)
 
     @app.context_processor
     def inject_navigation():
         nav_items = [
             {"endpoint": "index.index", "label": "announcements"},
             {"endpoint": "gallery.index", "label": "gallery"},
+            {"endpoint": "monitor.index", "label": "tracker monitor"},
         ]
         return dict(nav_items=nav_items)
 
