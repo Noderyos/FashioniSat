@@ -41,11 +41,14 @@ def get_gallery(page_idx: int) -> list:
         ORDER BY timestamp DESC;
     """
 
-    cur.execute(query, (5, page_idx * 5))
+    cur.execute(query, (20, page_idx * 20))
     products = cur.fetchall()
 
     data = []
     dataset = {}
+
+    cur.execute("SELECT value FROM settings WHERE key='gallery.skip_instruments'")
+    skip_instruments = cur.fetchone()[0].split(",")
 
     if products:
         prod_id_to_path = {
@@ -76,6 +79,7 @@ def get_gallery(page_idx: int) -> list:
 
         current_dataset = None
         for dat_id, prod_id, prod_path, timestamp, sat, instr in products:
+            if instr in skip_instruments: continue
             images = images_by_prod.get(prod_id, [])
 
             if not images:
@@ -122,7 +126,7 @@ def get_total_pages() -> int:
     count = cur.fetchone()[0]
     cur.close()
     conn.close()
-    return max(1, (count + 4) // 5)
+    return max(1, (count + 19) // 20)
 
 @bp.route("/")
 def index():

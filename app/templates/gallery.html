@@ -16,6 +16,17 @@
         </div>
       </summary>
       <div class="accordion-body">
+        <!--
+        {% if sat["cadu_files"] %}
+          <div class="cadu-files" style="margin-bottom: 10px;">
+            {% for cadu in sat["cadu_files"] %}
+              <a href="{{ url_for('gallery.data', path=cadu['url'].split('data/')[1]) }}" class="button" style="display:inline-block; padding: 5px 10px; background: #eee; border: 1px solid #ccc; text-decoration: none; color: black; border-radius: 4px; margin-right: 5px;">
+                Download {{ cadu['name'] }}
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+        -->
 
         {% for prod in sat["products"] %}
           <div class="product">

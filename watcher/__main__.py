@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from .process import process_product, process_dataset, process_image
+from .process import process_product, process_dataset, process_image, process_cadu
 from .utils import is_image, BASE_PATH
 
 from .watcher import run_filewatcher, run_updater
@@ -21,6 +21,8 @@ def list_files_walk(base_path: str) -> None:
                 process_product(conn, full_path)
             elif file == "dataset.json":
                 process_dataset(conn, full_path)
+            elif file.endswith(".cadu"):
+                process_cadu(conn, full_path)
             elif is_image(file):
                 process_image(conn, full_path, False)
     conn.close()

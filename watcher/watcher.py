@@ -9,7 +9,7 @@ from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
 
 from .utils import is_image, BASE_PATH
-from .process import process_product, process_dataset, process_image
+from .process import process_product, process_dataset, process_image, process_cadu
 
 from config_loader import config
 
@@ -20,25 +20,36 @@ update_lock = threading.Lock()
 
 
 def update_puller():
-    while True:
-        with update_lock:
-            conn = sqlite3.connect(os.path.join(config.DATA_FOLDER, "db.sqlite"))
-            items = list(update_queue.items())
-            for path, timestamp in items:
-                if timestamp > time.time() - COOLDOWN:
-                    continue
+    try:
+        while True:
+            now = time.time()
+            to_process = []
 
-                file = os.path.basename(path)
+            with update_lock:
+                for path, timestamp in list(update_queue.items()):
+                    if now - timestamp >= COOLDOWN:
+                        to_process.append(path)
+                        del update_queue[path]
 
-                if file == "product.cbor":
-                    process_product(conn, path)
-                elif file == "dataset.json":
-                    process_dataset(conn, path)
-                elif is_image(file):
-                    process_image(conn, path, False)
+            if to_process:
+                db_path = os.path.join(config.DATA_FOLDER, "db.sqlite")
+                conn = sqlite3.connect(db_path)
 
-        time.sleep(COOLDOWN)
+                for path in to_process:
+                    file = os.path.basename(path)
 
+                    if file == "product.cbor":
+                        process_product(conn, path)
+                    elif file.endswith(".cadu"):
+                        process_cadu(conn, path)
+                    elif file == "dataset.json":
+                        process_dataset(conn, path)
+                    elif is_image(file):
+                        process_image(conn, path, False)
+                conn.commit()
+                conn.close()
+
+            time.sleep(COOLDOWN)
 
 class Handler(FileSystemEventHandler):
     def on_modified(self, event):

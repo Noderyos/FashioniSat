@@ -3,9 +3,90 @@ import json
 import cbor2
 import sqlite3
 
-from .utils import hash_file, is_image, BASE_PATH
+from .utils import hash_file, is_image, BASE_PATH, parse_folder_name
 
 from . import LOGGER
+
+
+def infer_dataset(conn: sqlite3.Connection, relative_path: str) -> int:
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM dataset WHERE path = ?", (relative_path,))
+    res = cur.fetchone()
+    if res:
+        return res[0]
+    
+    folder_name = os.path.basename(relative_path)
+    satellite, timestamp = parse_folder_name(folder_name)
+    
+    cur.execute(
+        "INSERT INTO dataset(path, sha1, satellite, timestamp) VALUES (?, ?, ?, ?)",
+        (relative_path, "0"*40, satellite, timestamp)
+    )
+    return cur.lastrowid
+
+
+def infer_product(conn: sqlite3.Connection, relative_path: str) -> int:
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM product WHERE path = ?", (relative_path,))
+    res = cur.fetchone()
+    if res:
+        return res[0]
+        
+    parent_relative = os.path.dirname(relative_path)
+    if not parent_relative:
+        dataset_relative = relative_path
+        instrument = "Unknown"
+    else:
+        dataset_relative = parent_relative
+        instrument = os.path.basename(relative_path)
+        
+    cur.execute("SELECT id, satellite, timestamp FROM dataset WHERE path = ?", (dataset_relative,))
+    ds_res = cur.fetchone()
+    
+    if ds_res:
+        dataset_id = ds_res[0]
+        satellite = ds_res[1]
+        timestamp = ds_res[2]
+    else:
+        dataset_id = None
+        satellite, timestamp = parse_folder_name(os.path.basename(dataset_relative))
+        
+    cur.execute(
+        "INSERT INTO product(dataset_id, path, sha1, instrument, satellite, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
+        (dataset_id, relative_path, "0"*40, instrument, satellite, timestamp)
+    )
+    return cur.lastrowid
+
+def process_cadu(conn: sqlite3.Connection, cadu_path: str):
+    cur = conn.cursor()
+    cadu = os.path.basename(cadu_path)
+    cadu_hash = hash_file(cadu_path)
+    dataset_folder = os.path.dirname(cadu_path)
+    relative = os.path.relpath(dataset_folder, BASE_PATH)
+    
+
+    dataset_id = infer_dataset(conn, relative)
+    
+    # Link orphaned products
+    cur.execute("UPDATE product SET dataset_id = ? WHERE path LIKE ? AND dataset_id IS NULL", (dataset_id, relative + "/%"))
+    
+    cur.execute("SELECT sha1 FROM cadu_file WHERE dataset_id = ? AND file = ?", (dataset_id, cadu))
+    res = cur.fetchone()
+    if not res:
+        LOGGER.debug(f"New cadu {relative}/{cadu}")
+        cur.execute(
+            "INSERT INTO cadu_file(dataset_id, file, sha1) VALUES (?, ?, ?)",
+            (dataset_id, cadu, cadu_hash)
+        )
+    elif res[0] != cadu_hash:
+        LOGGER.debug(f"Updating cadu {relative}/{cadu}")
+        cur.execute(
+            "UPDATE cadu_file SET sha1 = ? WHERE dataset_id = ? AND file = ?",
+            (cadu_hash, dataset_id, cadu)
+        )
+    
+    cur.close()
+    conn.commit()
 
 
 def process_image(conn: sqlite3.Connection, image_path: str, from_product: bool):
@@ -15,12 +96,13 @@ def process_image(conn: sqlite3.Connection, image_path: str, from_product: bool)
     image_hash = hash_file(image_path)
 
     relative = os.path.relpath(image_path, BASE_PATH)
-    cur.execute("SELECT id FROM product WHERE path = ?", (os.path.dirname(relative),))
+    prod_relative = os.path.dirname(relative)
+    cur.execute("SELECT id FROM product WHERE path = ?", (prod_relative,))
     result = cur.fetchone()
     if not result:
-        return
-
-    (prod_id,) = result
+        prod_id = infer_product(conn, prod_relative)
+    else:
+        (prod_id,) = result
 
     cur.execute(
         "SELECT sha1 FROM image WHERE product_id = ? AND file = ?", (prod_id, image)
