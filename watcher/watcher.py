@@ -20,36 +20,35 @@ update_lock = threading.Lock()
 
 
 def update_puller():
-    try:
-        while True:
-            now = time.time()
-            to_process = []
+    while True:
+        now = time.time()
+        to_process = []
 
-            with update_lock:
-                for path, timestamp in list(update_queue.items()):
-                    if now - timestamp >= COOLDOWN:
-                        to_process.append(path)
-                        del update_queue[path]
+        with update_lock:
+            for path, timestamp in list(update_queue.items()):
+                if now - timestamp >= COOLDOWN:
+                    to_process.append(path)
+                    del update_queue[path]
 
-            if to_process:
-                db_path = os.path.join(config.DATA_FOLDER, "db.sqlite")
-                conn = sqlite3.connect(db_path)
+        if to_process:
+            db_path = os.path.join(config.DATA_FOLDER, "db.sqlite")
+            conn = sqlite3.connect(db_path)
 
-                for path in to_process:
-                    file = os.path.basename(path)
+            for path in to_process:
+                file = os.path.basename(path)
 
-                    if file == "product.cbor":
-                        process_product(conn, path)
-                    elif file.endswith(".cadu"):
-                        process_cadu(conn, path)
-                    elif file == "dataset.json":
-                        process_dataset(conn, path)
-                    elif is_image(file):
-                        process_image(conn, path, False)
-                conn.commit()
-                conn.close()
+                if file == "product.cbor":
+                    process_product(conn, path)
+                elif file.endswith(".cadu"):
+                    process_cadu(conn, path)
+                elif file == "dataset.json":
+                    process_dataset(conn, path)
+                elif is_image(file):
+                    process_image(conn, path, False)
+            conn.commit()
+            conn.close()
 
-            time.sleep(COOLDOWN)
+        time.sleep(COOLDOWN)
 
 class Handler(FileSystemEventHandler):
     def on_modified(self, event):
