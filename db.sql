@@ -38,3 +38,16 @@ CREATE TABLE IF NOT EXISTS user (
     username VARCHAR(32) UNIQUE NOT NULL,
     passwd_hash CHAR(40) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS cadu_file (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dataset_id INTEGER NOT NULL,
+    file TEXT NOT NULL,
+    sha1 CHAR(40) NOT NULL,
+    FOREIGN KEY (dataset_id) REFERENCES dataset(id)
+);
